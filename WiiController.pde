@@ -75,10 +75,10 @@ public class WiiControl implements WiiController {
       String which = theOscMessage.addrPattern().split("/")[3];
       if (which.equals("b")) {
         if (theOscMessage.get(1).intValue() == 1) {
-          println(">> Trigger pressed.");
+          println(">> Trigger pressed @ "+millis());
           this.triggerPressed = true;
         } else {
-          println(">> Trigger released.");
+          println(">> Trigger released @ "+millis());
         }
       }
     }
