@@ -46,6 +46,7 @@ public class WiiControl implements WiiController {
   
   private int rumbleOffMillis;
   private boolean isRumbleOn;
+  private boolean triggerPressed;
   
   public WiiControl(NetAddress myRemoteLocation) {
     this.id = -1;
@@ -53,6 +54,8 @@ public class WiiControl implements WiiController {
     this.accX = this.accY = this.accZ = 0.0;
     
     this.myRemoteLocation = myRemoteLocation;
+    
+    this.isRumbleOn = this.triggerPressed = false;
   }
   
   public void oscEvent(OscMessage theOscMessage) {

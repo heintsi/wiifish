@@ -1,5 +1,5 @@
 /*
-
+Fishing game for Wiimote.
 */
  
 import oscP5.*;
