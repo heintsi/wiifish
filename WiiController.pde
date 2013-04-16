@@ -11,6 +11,17 @@ interface WiiController {
   public boolean triggerPressed();
   
   /**
+  Event telling the trigger has just been pressed. 
+  */
+  public boolean triggerPress();
+  
+  /**
+  Event telling the trigger has just been released. 
+  */
+  public boolean triggerRelease();
+  
+  
+  /**
   Tells whether the user is "reeling" right now.
   */
   public boolean isReeling();
@@ -30,6 +41,11 @@ interface WiiController {
   */
   public boolean isThrown();
   
+  /**
+  Method for invoking a series of rumbles, telling a fish is nibbling.
+  @param nTimes how many rumbles to give
+  */
+  public void fishNibbles(int nTimes);
   
   /**
   Method to be called once per frame
@@ -43,19 +59,20 @@ public class WiiControl implements WiiController {
   private boolean isNew;
   private float accX, accY, accZ;
   private NetAddress myRemoteLocation;
+  private Rumbler rumbler;
   
-  private int rumbleOffMillis;
-  private boolean isRumbleOn;
-  private boolean triggerPressed;
+  private boolean triggerPressed, triggerPressFlag, triggerReleaseFlag;
   
   public WiiControl(NetAddress myRemoteLocation) {
     this.id = -1;
     this.isNew = true;
     this.accX = this.accY = this.accZ = 0.0;
+    this.triggerPressed = 
+      this.triggerPressFlag = 
+      this.triggerReleaseFlag = false;
     
     this.myRemoteLocation = myRemoteLocation;
-    
-    this.isRumbleOn = this.triggerPressed = false;
+    this.rumbler = new Rumbler();
   }
   
   public void oscEvent(OscMessage theOscMessage) {
@@ -76,9 +93,12 @@ public class WiiControl implements WiiController {
       if (which.equals("b")) {
         if (theOscMessage.get(1).intValue() == 1) {
           println(">> Trigger pressed @ "+millis());
+          this.triggerPressFlag = true;
           this.triggerPressed = true;
         } else {
           println(">> Trigger released @ "+millis());
+          this.triggerReleaseFlag = true;
+          this.triggerPressed = false;
         }
       }
     }
@@ -86,10 +106,7 @@ public class WiiControl implements WiiController {
   
   public void update() {
     // rumble
-    if (isRumbleOn && rumbleOffMillis <= millis()) {
-      setRumble(false);
-      println("    Rumble over.");
-    }
+    rumbler.update();
   }
   
   public void setId(int id) {
@@ -136,8 +153,21 @@ public class WiiControl implements WiiController {
   }
   
   public boolean triggerPressed() {
-    if (triggerPressed) {
-      triggerPressed = false;
+    return triggerPressed;
+  }
+  
+  public boolean triggerPress() {
+    if (triggerPressFlag) {
+      triggerPressFlag = false;
+      return true;
+    }
+    
+    return false;
+  }
+  
+  public boolean triggerRelease() {
+    if (triggerReleaseFlag) {
+      triggerReleaseFlag = false;
       return true;
     }
     
@@ -160,25 +190,17 @@ public class WiiControl implements WiiController {
     return false;
   }
   
-  public void setRumble(boolean on) {
-    isRumbleOn = on;
-    
-    OscMessage myMessage = new OscMessage("/wii/rumble");
-    
-    myMessage.add(wiiControl.getId()); /* add an int to the osc message */
-    myMessage.add(on ? 1 : 0);
-  
-    /* send the message */
-    oscP5.send(myMessage, myRemoteLocation); 
+  public void fishNibbles(int nTimes) {
+    rumbler.doRandomRumbles(nTimes);
   }
   
-  public void rumble(int millis) {
-    this.rumbleOffMillis = millis()+millis;
-    println("!!! Rumble: "+millis);
-    this.setRumble(true);
-  }
+  
 
-  public void setLeds(boolean led1, boolean led2, boolean led3, boolean led4) {
+
+  ////// Private methods to more directly use hardware functions
+  
+  
+  private void setLeds(boolean led1, boolean led2, boolean led3, boolean led4) {
     OscMessage myMessage = new OscMessage("/wii/leds");
   
     myMessage.add(this.getId()); /* add the ID the osc message */
@@ -191,4 +213,78 @@ public class WiiControl implements WiiController {
     /* send the message */
     oscP5.send(myMessage, myRemoteLocation); 
   }
+  
+  /**
+  Helper class to do all the rumbling.
+  */
+  class Rumbler {
+    
+    private int n, maxN;
+    private int[] rumbleStartMillis;
+    private int[] rumbleStopMillis;
+    
+    private boolean isRumbling;
+    
+    Rumbler() {
+      this.n = 0;
+      this.rumbleStartMillis = new int[64];
+      this.rumbleStopMillis = new int[64];
+      this.isRumbling = false;
+    }
+    
+    
+    /**
+    Does rumbles nTimes in succession.
+    For each rumble, a pause follows.
+    */
+    void doRandomRumbles(int nTimes) {
+      this.n = 0;
+      this.maxN = nTimes-1;
+      
+      // Rumble lengths alternate with pause lengths
+      
+      int lastMillis = millis();
+      
+      for (int i = 0; i < nTimes; i++) {
+        // Rumble 100-150 ms
+        this.rumbleStartMillis[i] = lastMillis + (int)(100 + Math.random()*50);
+        lastMillis = this.rumbleStartMillis[i];
+        
+        // Pause 50-80 ms
+        this.rumbleStopMillis[i] = lastMillis + (int)(50 + Math.random()*30);
+        lastMillis = this.rumbleStopMillis[i];
+      }
+      this.update();
+    }
+    
+    void update() {
+      if (n <= maxN) {
+        if (isRumbling) {
+          if (rumbleStopMillis[n] < millis()) {
+            setRumble(false);
+            
+            // This rumble cycle is done, increase n.
+            n++;
+          }
+        } else {
+          if (rumbleStartMillis[n] < millis()) {
+            setRumble(true);
+          }
+        }
+      }
+    }
+    
+    private void setRumble(boolean rumbling) {
+      this.isRumbling = rumbling;
+      
+      OscMessage myMessage = new OscMessage("/wii/rumble");
+      
+      myMessage.add(wiiControl.getId()); /* add an int to the osc message */
+      myMessage.add(rumbling ? 1 : 0);
+    
+      /* send the message */
+      oscP5.send(myMessage, myRemoteLocation); 
+    }
+  }
+
 }

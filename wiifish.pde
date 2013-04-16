@@ -20,14 +20,7 @@ void setup() {
   frameRate(25);
   /* start oscP5, listening for incoming messages at port 12000 */
   oscP5 = new OscP5(this,12000);
-  
-  /* myRemoteLocation is a NetAddress. a NetAddress takes 2 parameters,
-   * an ip address and a port number. myRemoteLocation is used as parameter in
-   * oscP5.send() when sending osc packets to another computer, device, 
-   * application. usage see below. for testing purposes the listening port
-   * and the port of the remote location address are the same, hence you will
-   * send messages back to this sketch.
-   */
+  /* send outgoing messages to port 3001 */
   myRemoteLocation = new NetAddress("127.0.0.1",3001);
   
   wiiControl = new WiiControl(myRemoteLocation);
@@ -35,18 +28,14 @@ void setup() {
 
 
 void draw() {
-  background(rumble ? color(255,0,0) : 0);  
+  background(wiiControl.triggerPressed() ? color(255,0,0) : 0);  
   if (wiiControl.getId() > -1) {
     wiiControl.update();
-    //printAcc(wiiControl.getAcc('x'), wiiControl.getAcc('y'), wiiControl.getAcc('z'));
-    
-    //println(frameCount);
-    //wiiControl.setLeds(false,false,false,false);
   }
 }
 
 void mousePressed() {
-  wiiControl.rumble(100);
+  wiiControl.fishNibbles(2);
 }
 
 void keyPressed() {
