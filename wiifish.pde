@@ -6,6 +6,8 @@ import oscP5.*;
 import netP5.*;
 import java.util.ArrayList;
 
+static final boolean SMOOTH_ACC = true;
+
 OscP5 oscP5;
 NetAddress myRemoteLocation;
 int wiiMoteId = -1;
@@ -38,27 +40,46 @@ void draw() {
     // Middle line
     stroke(126);
     line(0, height/2, width, height/2);
+    // Other straight lines
+    stroke(64);
+    line(0, height/2 - 30, width, height/2 - 30);
+    line(0, height/2 + 30, width, height/2 + 30);
+    line(0, height/2 - 60, width, height/2 - 60);
+    line(0, height/2 + 60, width, height/2 + 60);
+    
+    
 
     // acceleration
     
-    stroke(color(255, 0, 0));
-    drawAccGraph(wiiControl.getAccData('x'));
-    
-    stroke(color(0, 255, 0));
-    drawAccGraph(wiiControl.getAccData('y'));
-    
-    stroke(color(0, 0, 255));
-    drawAccGraph(wiiControl.getAccData('z'));
+    if (SMOOTH_ACC == false) {
+      stroke(color(255, 0, 0));
+      drawAccGraph(wiiControl.getAccData('x'));
+      
+      stroke(color(0, 255, 0));
+      drawAccGraph(wiiControl.getAccData('y'));
+      
+      stroke(color(0, 0, 255));
+      drawAccGraph(wiiControl.getAccData('z'));
+    } else {
+      stroke(color(255, 0, 0));
+      drawAccGraph(wiiControl.getSmoothAccData('x'));
+      
+      stroke(color(0, 255, 0));
+      drawAccGraph(wiiControl.getSmoothAccData('y'));
+      
+      stroke(color(0, 0, 255));
+      drawAccGraph(wiiControl.getSmoothAccData('z'));      
+    }
   }
 }
 
 void drawAccGraph(ArrayList<Float> accData) {
-  int K = 800; // amplification constant
+  int K = 1000; // amplification constant
   
   float lastY = height/2;
 
   for (int i = 1; i < accData.size(); i++) {
-    float y = height/2 + accData.get(i).floatValue()*K;
+    float y = height/2 - accData.get(i).floatValue()*K;
     line(i-1, lastY, i, y);
       
     lastY = y;
@@ -66,7 +87,7 @@ void drawAccGraph(ArrayList<Float> accData) {
 }
 
 void mousePressed() {
-  wiiControl.fishNibbles(2);
+  wiiControl.fishNibbles((int)Math.random()*5 + 1);
 }
 
 void keyPressed() {

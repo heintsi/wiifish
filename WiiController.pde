@@ -55,24 +55,34 @@ interface WiiController {
 
 public class WiiControl implements WiiController {
   
+  private static final int SMOOTH_LEVEL = 2;
+  
   private int id;
   private boolean isNew;
   private float calibX, calibY, calibZ, accX, accY, accZ;
   private NetAddress myRemoteLocation;
   private Rumbler rumbler;
   
-  private ArrayList<Float> accXData, accYData, accZData;
+  private ArrayList<Float> accXData,accYData,accZData, accXSmooth,accYSmooth,accZSmooth;
   
   private boolean triggerPressed, triggerPressFlag, triggerReleaseFlag;
+  private boolean lightPullFlag, strongPullFlag, isThrownFlag;
+  
+  private float lastPullMillis;
   
   public WiiControl(NetAddress myRemoteLocation) {
     this.id = -1;
     this.isNew = true;
     this.calibX = this.calibY = this.calibZ =
-      this.accX = this.accY = this.accZ = 0.0;
+      this.accX = this.accY = this.accZ = 0.0;  
+    this.lastPullMillis = 0.0;
+    
     this.triggerPressed = 
       this.triggerPressFlag = 
-      this.triggerReleaseFlag = false;
+      this.triggerReleaseFlag = 
+      this.lightPullFlag =
+      this.strongPullFlag =
+      this.isThrownFlag = false;
     
     this.myRemoteLocation = myRemoteLocation;
     this.rumbler = new Rumbler();
@@ -81,6 +91,11 @@ public class WiiControl implements WiiController {
     this.accXData = new ArrayList<Float>();
     this.accYData = new ArrayList<Float>();
     this.accZData = new ArrayList<Float>();
+    
+    // these lists are used to store smoothed versions of the above
+    this.accXSmooth = new ArrayList<Float>();
+    this.accYSmooth = new ArrayList<Float>();
+    this.accZSmooth = new ArrayList<Float>();
   }
   
   public void printAcc() {
@@ -137,10 +152,58 @@ public class WiiControl implements WiiController {
     while (accZData.size() > width)
       accZData.remove(0);
     
-    //println(accZData.size());
+    // update smoothed versions
+    if (accXData.size() > SMOOTH_LEVEL) {
+      float sum = 0.0;
+      for (int i = 0; i < SMOOTH_LEVEL; i++) {
+        sum += accXData.get(accXData.size()-1-i);
+      }
+      float mean = sum / (SMOOTH_LEVEL+1);
+      accXSmooth.add(mean);
+    }
+    if (accYData.size() > SMOOTH_LEVEL) {
+      float sum = 0.0;
+      for (int i = 0; i < SMOOTH_LEVEL; i++) {
+        sum += accYData.get(accYData.size()-1-i);
+      }
+      float mean = sum / (SMOOTH_LEVEL+1);
+      accYSmooth.add(mean);
+    }
+    if (accZData.size() > SMOOTH_LEVEL) {
+      float sum = 0.0;
+      for (int i = 0; i < SMOOTH_LEVEL; i++) {
+        sum += accZData.get(accZData.size()-1-i);
+      }
+      float mean = sum / (SMOOTH_LEVEL+1);
+      accZSmooth.add(mean);
+    }
+    while (accXSmooth.size() > width)
+      accXSmooth.remove(0);
+    while (accYSmooth.size() > width)
+      accYSmooth.remove(0);
+    while (accZSmooth.size() > width)
+      accZSmooth.remove(0);
+    
+    testStrongPull();
+    testLightPull();
+    
     // rumble
     rumbler.update();
   }
+  
+  private float getAcc(char c) {
+    switch (c) {
+      case 'x':
+        return this.accX;
+      case 'y':
+        return this.accY;
+      case 'z':
+        return this.accZ;
+      default:
+        return 0.0;
+    }
+  }
+
   
   private void found(int id) {
     println("NEW mote id: "+id);
@@ -170,18 +233,6 @@ public class WiiControl implements WiiController {
         break;
     }
   }
-  public float getAcc(char c) {
-    switch (c) {
-      case 'x':
-        return this.accX;
-      case 'y':
-        return this.accY;
-      case 'z':
-        return this.accZ;
-      default:
-        return 0.0;
-    }
-  }
   public ArrayList<Float> getAccData(char c) {
     switch (c) {
       case 'x':
@@ -190,6 +241,19 @@ public class WiiControl implements WiiController {
         return this.accYData;
       case 'z':
         return this.accZData;
+      default:
+        return null;
+    }
+  }
+  
+  public ArrayList<Float> getSmoothAccData(char c) {
+    switch (c) {
+      case 'x':
+        return this.accXSmooth;
+      case 'y':
+        return this.accYSmooth;
+      case 'z':
+        return this.accZSmooth;
       default:
         return null;
     }
@@ -235,10 +299,20 @@ public class WiiControl implements WiiController {
   }
   
   public boolean lightPull() {
+    if (lightPullFlag) {
+      lightPullFlag = false;
+      return true;
+    }
+    
     return false;
   }
 
   public boolean strongPull() {
+    if (strongPullFlag) {
+      strongPullFlag = false;
+      return true;
+    }
+    
     return false;
   }
   
@@ -246,6 +320,76 @@ public class WiiControl implements WiiController {
     rumbler.doRandomRumbles(nTimes);
   }
   
+  
+  ////// Gesture test methods
+  
+  private void testLightPull() {
+    
+    int datapoints = 10;
+    float threshold = 0.03;
+    
+    if(genericPull(datapoints, threshold)) {
+      println("  -> light pull @ "+millis());
+    }
+  }
+  
+  private void testStrongPull() {
+    
+    int datapoints = 10;
+    float threshold = 0.06;
+    
+    if(genericPull(datapoints, threshold)) {
+      println("  ---> STRONG PULL @ "+millis());
+    }
+  }
+  
+  private boolean genericPull(int datapoints, float threshold) {
+    // this is how much the pulls need to be apart
+    int waitMillis = 300;
+    
+    if (millis() < lastPullMillis+waitMillis)
+      return false;
+    
+    
+    // avoid ArrayIndexOutOfBounds
+    if (accZSmooth.size() < datapoints) {
+      return false;
+    }
+    
+    float[] data = new float[datapoints];
+    for (int i = 0; i < datapoints; i++) {
+      int listI = accZSmooth.size()-datapoints+i;
+      data[i] = accZSmooth.get(listI).floatValue();
+    }
+    
+    int downPeakIdx = -1;
+    int upPeakIdx = -1;
+    
+    // go through the last accZ datapoints to see if the 
+    // acceleration has changed down and up severely 
+    
+    for (int i = 0; i < datapoints; i++) {
+      if (-data[i] > threshold) {
+        downPeakIdx = i;
+        break;
+      }
+    }
+    if (downPeakIdx < 0)
+      return false;
+    for (int i = downPeakIdx; i < datapoints; i++) {
+      if (data[i] > threshold) {
+        upPeakIdx = i;
+        break;
+      }
+    }
+    
+    if (downPeakIdx > 0 && upPeakIdx > 0) {
+      lastPullMillis = millis();
+      return true;
+    } else {
+      return false;
+    }
+  }
   
 
 
