@@ -335,7 +335,7 @@ public class WiiControl implements WiiController {
   
   private void testStrongPull() {
     
-    int datapoints = 10;
+    int datapoints = 15;
     float threshold = 0.06;
     
     if(genericPull(datapoints, threshold)) {
@@ -345,7 +345,7 @@ public class WiiControl implements WiiController {
   
   private boolean genericPull(int datapoints, float threshold) {
     // this is how much the pulls need to be apart
-    int waitMillis = 300;
+    int waitMillis = 500;
     
     if (millis() < lastPullMillis+waitMillis)
       return false;
