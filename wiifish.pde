@@ -1,10 +1,11 @@
 /*
 Fishing game for Wiimote.
-*/
- 
+ */
+
 import oscP5.*;
 import netP5.*;
-  
+import java.util.ArrayList;
+
 OscP5 oscP5;
 NetAddress myRemoteLocation;
 int wiiMoteId = -1;
@@ -15,22 +16,52 @@ boolean leds = false;
 WiiControl wiiControl;
 
 
+
 void setup() {
-  size(400,400);
+  size(400, 400);
   frameRate(25);
   /* start oscP5, listening for incoming messages at port 12000 */
-  oscP5 = new OscP5(this,12000);
+  oscP5 = new OscP5(this, 12000);
   /* send outgoing messages to port 3001 */
-  myRemoteLocation = new NetAddress("127.0.0.1",3001);
-  
+  myRemoteLocation = new NetAddress("127.0.0.1", 3001);
+
   wiiControl = new WiiControl(myRemoteLocation);
 }
 
 
 void draw() {
-  background(wiiControl.triggerPressed() ? color(255,0,0) : 0);  
+  background(wiiControl.triggerPressed() ? color(255, 0, 0) : 0);  
   if (wiiControl.getId() > -1) {
     wiiControl.update();
+
+    
+    // Middle line
+    stroke(126);
+    line(0, height/2, width, height/2);
+
+    // acceleration
+    
+    stroke(color(255, 0, 0));
+    drawAccGraph(wiiControl.getAccData('x'));
+    
+    stroke(color(0, 255, 0));
+    drawAccGraph(wiiControl.getAccData('y'));
+    
+    stroke(color(0, 0, 255));
+    drawAccGraph(wiiControl.getAccData('z'));
+  }
+}
+
+void drawAccGraph(ArrayList<Float> accData) {
+  int K = 800; // amplification constant
+  
+  float lastY = height/2;
+
+  for (int i = 1; i < accData.size(); i++) {
+    float y = height/2 + accData.get(i).floatValue()*K;
+    line(i-1, lastY, i, y);
+      
+    lastY = y;
   }
 }
 
@@ -41,7 +72,7 @@ void mousePressed() {
 void keyPressed() {
   if (keyCode == UP) {
     leds = !leds;
-    wiiControl.setLeds(leds,!leds,!leds,leds);
+    wiiControl.setLeds(leds, !leds, !leds, leds);
   }
 }
 
@@ -50,6 +81,3 @@ void oscEvent(OscMessage theOscMessage) {
   wiiControl.oscEvent(theOscMessage);
 }
 
-void printAcc(float x, float y, float z) {
-  System.out.printf("x: %f, y: %f, z: %f\n", x, y, z);
-}
