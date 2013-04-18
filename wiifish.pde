@@ -12,9 +12,6 @@ OscP5 oscP5;
 NetAddress myRemoteLocation;
 int wiiMoteId = -1;
 
-boolean rumble = false;
-boolean leds = false;
-
 WiiControl wiiControl;
 
 FishGame gameInstance;
@@ -97,8 +94,7 @@ void mousePressed() {
 
 void keyPressed() {
   if (keyCode == UP) {
-    leds = !leds;
-    wiiControl.setLeds(leds, !leds, !leds, leds);
+    wiiControl.fishCaught();
   } else if (keyCode == ENTER) {
     if (gameInstance == null) {
       gameInstance = new FishGame(wiiControl);

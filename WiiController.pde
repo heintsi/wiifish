@@ -48,6 +48,21 @@ interface WiiController {
   public void fishNibbles(int nTimes);
   
   /**
+  Method to tell the WiiController a new fish has been caught.
+  */
+  public void fishCaught();
+  
+  /**
+  Method to reset fishing progress.
+  */
+  public void resetFishing();
+  
+  /**
+  Method to be called when the game has been won.
+  */
+  public void gameWon();
+  
+  /**
   Method to be called once per frame
   */
   public void update();
@@ -57,7 +72,7 @@ public class WiiControl implements WiiController {
   
   private static final int SMOOTH_LEVEL = 2;
   
-  private int id;
+  private int id, nFishCaught;
   private boolean isNew;
   private float calibX, calibY, calibZ, accX, accY, accZ;
   private NetAddress myRemoteLocation;
@@ -67,12 +82,14 @@ public class WiiControl implements WiiController {
   
   private boolean triggerPressed, triggerPressFlag, triggerReleaseFlag;
   private boolean lightPullFlag, strongPullFlag, isThrownFlag;
+  private boolean isWon;
   
   private float lastPullMillis;
   
   public WiiControl(NetAddress myRemoteLocation) {
     this.id = -1;
     this.isNew = true;
+    
     this.calibX = this.calibY = this.calibZ =
       this.accX = this.accY = this.accZ = 0.0;  
     this.lastPullMillis = 0.0;
@@ -96,6 +113,23 @@ public class WiiControl implements WiiController {
     this.accXSmooth = new ArrayList<Float>();
     this.accYSmooth = new ArrayList<Float>();
     this.accZSmooth = new ArrayList<Float>();
+    
+    resetFishing();
+  }
+  
+  public void resetFishing() {
+    this.nFishCaught = 0;
+    this.isWon = false;
+  }
+  
+  public void fishCaught() {
+    this.nFishCaught++;
+    println("You caught a fish! Total: "+nFishCaught);
+    ledUpdate();
+  }
+  
+  public void gameWon() {
+    this.isWon = true;
   }
   
   public void printAcc() {
@@ -187,8 +221,23 @@ public class WiiControl implements WiiController {
     testStrongPull();
     testLightPull();
     
-    // rumble
+    // rumbler
     rumbler.update();
+    
+  }
+  
+  private void ledUpdate() {
+    // show the number of fish caught using the leds
+    int n = this.nFishCaught;
+    if (n == 0) {
+      this.setLeds(false,false,false,false);
+    } else {
+      this.setLeds(
+        n%4 >= 1 || n%4 == 0,
+        n%4 >= 2 || n%4 == 0,
+        n%4 >= 3 || n%4 == 0,
+        n%4 == 0);
+    }  
   }
   
   private float getAcc(char c) {
@@ -208,7 +257,7 @@ public class WiiControl implements WiiController {
   private void found(int id) {
     println("NEW mote id: "+id);
     this.id = id;
-    this.setLeds(true,false,false,false);
+    this.setLeds(false,false,false,false);
   }
   public int getId() {
     return id;
@@ -330,6 +379,7 @@ public class WiiControl implements WiiController {
     
     if(genericPull(datapoints, threshold)) {
       println("  -> light pull @ "+millis());
+      lightPullFlag = true;
     }
   }
   
@@ -340,6 +390,7 @@ public class WiiControl implements WiiController {
     
     if(genericPull(datapoints, threshold)) {
       println("  ---> STRONG PULL @ "+millis());
+      strongPullFlag = true;
     }
   }
   
@@ -409,24 +460,6 @@ public class WiiControl implements WiiController {
     /* send the message */
     oscP5.send(myMessage, myRemoteLocation); 
   }
-  
-  /**
-  These are stored in the accData list.
-  
-  class AccData {
-    private float x,y,z;
-    
-    AccData(float x, float y, float z) {
-      this.x = x;
-      this.y = y;
-      this.z = z;
-    }
-    
-    float getX() { return x; }
-    float getY() { return y; }
-    float getZ() { return z; }
-    
-  }*/
   
   /**
   Helper class to do all the rumbling.
