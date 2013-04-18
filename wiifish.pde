@@ -95,6 +95,8 @@ void mousePressed() {
 void keyPressed() {
   if (keyCode == UP) {
     wiiControl.fishCaught();
+  } else if(keyCode == DOWN) {
+    wiiControl.gameWon();
   } else if (keyCode == ENTER) {
     if (gameInstance == null) {
       gameInstance = new FishGame(wiiControl);

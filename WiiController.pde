@@ -122,6 +122,7 @@ public class WiiControl implements WiiController {
   public void resetFishing() {
     this.nFishCaught = 0;
     this.isWon = false;
+    this.fireWorks.stop();
   }
   
   public void fishCaught() {
@@ -132,6 +133,7 @@ public class WiiControl implements WiiController {
   
   public void gameWon() {
     this.isWon = true;
+    println("WiiControl: game won!");
   }
   
   public void printAcc() {
@@ -222,6 +224,7 @@ public class WiiControl implements WiiController {
     
     
     if (isWon) {
+      if (!fireWorks.isRunning()) fireWorks.start();
       fireWorks.update();
     } else {
       testStrongPull();
@@ -484,11 +487,12 @@ public class WiiControl implements WiiController {
     }
     
     boolean isRunning() {
-      return this.startFrame == -1 ? false : true;
+      return (this.startFrame == -1 ? false : true);
     }
     
     void start() {
       this.startFrame = frameCount;
+      println("FireWorks started @ "+millis());
     }
     
     void stop() {
@@ -497,12 +501,12 @@ public class WiiControl implements WiiController {
     
     void update() {
       if (this.isRunning()) {
-        if (startFrame%FRAMES_PER_CYCLE == 0) {
-          float p = 0.4;
+        if ( (frameCount-startFrame) % FRAMES_PER_CYCLE == 0) {
+          float p = 0.35;
           WiiControl.this.setLeds(
             Math.random() < p,
-            Math.random() < p,
-            Math.random() < p,
+            Math.random() < p+0.1,
+            Math.random() < p+0.1,
             Math.random() < p);
         }
       }
