@@ -4,6 +4,7 @@ class FishGame {
   private boolean running;
   private boolean baitInWater;
   private boolean fishAtBait;
+  private int fishCount;
   
   private float probOfNewFish = 0.002;
   
@@ -13,6 +14,7 @@ class FishGame {
   public FishGame(WiiController wiimote) {
     this.wiimote = wiimote;
     this.running = false;
+    this.fishCount = 0;
     this.baitInWater = true; // change to false when "isThrown" is implemented
     this.fishAtBait = false;
     
@@ -55,7 +57,9 @@ class FishGame {
   }
   
   private boolean isAllowedToFinish() {
-    return false;
+    if (this.fishCount < 4)
+      return false;
+    return true;
   }
   
   private void finishGame() {
@@ -74,8 +78,9 @@ class FishGame {
   private void fishCaught() {
     this.fishAtBait = false;
     this.baitInWater = false;
-    wiimote.fishCaught();
+    this.fishCount++;
     println("Game: Caught fish!");
+    wiimote.fishesCaught(fishCount);
   }
   
   private void updateFishAtBait() {

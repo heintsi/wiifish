@@ -48,9 +48,10 @@ interface WiiController {
   public void fishNibbles(int nTimes);
   
   /**
-  Method to tell the WiiController a new fish has been caught.
+  Methods to tell the WiiController a new fish has been caught.
   */
   public void fishCaught();
+  public void fishesCaught(int n);
   
   /**
   Method to reset fishing progress.
@@ -131,9 +132,15 @@ public class WiiControl implements WiiController {
     if (DBG) println("WiiControl: Fish caught! Total: "+nFishCaught);
     ledUpdate();
   }
+  public void fishesCaught(int n) {
+    this.nFishCaught = n;
+    println("WiiControl: Fishes caught: "+nFishCaught);
+    ledUpdate();
+  }
   
   public void gameWon() {
     this.isWon = true;
+    rumbler.rumbleOnce(1500);
     if (DBG) println("WiiControl: game won!");
   }
   
@@ -554,6 +561,14 @@ public class WiiControl implements WiiController {
         this.rumbleStopMillis[i] = lastMillis + (int)(50 + Math.random()*30);
         lastMillis = this.rumbleStopMillis[i];
       }
+      this.update();
+    }
+    
+    void rumbleOnce(int millis) {
+      this.n = 0;
+      this.maxN = 1;
+      this.rumbleStartMillis[0] = millis();
+      this.rumbleStopMillis[1] = millis()+millis;
       this.update();
     }
     
