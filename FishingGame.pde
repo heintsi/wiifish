@@ -5,13 +5,19 @@ class FishGame {
   private boolean baitInWater;
   private boolean fishAtBait;
   
-  private float probOfNewFish = 0.1;
+  private float probOfNewFish = 0.002;
+  
+  private boolean strongPullDetected;
+  private boolean lightPullDetected;
   
   public FishGame(WiiController wiimote) {
     this.wiimote = wiimote;
     this.running = false;
-    this.baitInWater = false;
+    this.baitInWater = true; // change to false when "isThrown" is implemented
     this.fishAtBait = false;
+    
+    this.strongPullDetected = false;
+    this.lightPullDetected = false;
     println("Game created.");
   }
   
@@ -21,6 +27,9 @@ class FishGame {
   }
   
   public void updateGameState() {
+     this.strongPullDetected = wiimote.strongPull();
+     this.lightPullDetected = wiimote.lightPull();
+    
     if (!this.isRunning()) return;
     // else update game state, fishnibbles, catch a fish etc.
     if (this.isAllowedToFinish()) {
@@ -32,7 +41,7 @@ class FishGame {
       return;
     }
     if (this.fishAtBait) {
-      if (wiimote.strongPull()) {
+      if (this.strongPullDetected) {
         this.fishCaught();
       }
       this.updateFishAtBait();
@@ -65,22 +74,22 @@ class FishGame {
   private void fishCaught() {
     this.fishAtBait = false;
     this.baitInWater = false;
+    wiimote.fishCaught();
     println("Game: Caught fish!");
   }
   
   private void updateFishAtBait() {
     
-    
-    this.generateFishNibbles();
+    if (Math.random() > 0.95) this.generateFishNibbles();
   }
   
   private void generateFishNibbles() {
-    
+    wiimote.fishNibbles(3);
   }
   
   private void generateFish() {
-    if (wiimote.lightPull()) {
-      probOfNewFish += 0.1;
+    if (this.lightPullDetected) {
+      probOfNewFish += 0.002;
     }
     if (Math.random() < probOfNewFish) {
       this.fishAtBait = true;
