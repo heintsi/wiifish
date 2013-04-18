@@ -77,6 +77,7 @@ public class WiiControl implements WiiController {
   private float calibX, calibY, calibZ, accX, accY, accZ;
   private NetAddress myRemoteLocation;
   private Rumbler rumbler;
+  private FireWorks fireWorks;
   
   private ArrayList<Float> accXData,accYData,accZData, accXSmooth,accYSmooth,accZSmooth;
   
@@ -103,6 +104,7 @@ public class WiiControl implements WiiController {
     
     this.myRemoteLocation = myRemoteLocation;
     this.rumbler = new Rumbler();
+    this.fireWorks = new FireWorks();
     
     // lists store accelerator data so that the newest data is at the end
     this.accXData = new ArrayList<Float>();
@@ -218,8 +220,14 @@ public class WiiControl implements WiiController {
     while (accZSmooth.size() > width)
       accZSmooth.remove(0);
     
-    testStrongPull();
-    testLightPull();
+    
+    if (isWon) {
+      fireWorks.update();
+    } else {
+      testStrongPull();
+      testLightPull();
+    }
+    
     
     // rumbler
     rumbler.update();
@@ -459,6 +467,46 @@ public class WiiControl implements WiiController {
   
     /* send the message */
     oscP5.send(myMessage, myRemoteLocation); 
+  }
+  
+  /**
+  Helper class for the fireworks.
+  */
+  class FireWorks {
+    private static final int FRAMES_PER_CYCLE = 15;
+    
+    private boolean led1,led2,led3,led4;
+    private int startFrame;
+    
+    FireWorks() {
+      this.led1 = this.led2 = this.led3 = this.led4 = false;
+      this.startFrame = -1;
+    }
+    
+    boolean isRunning() {
+      return this.startFrame == -1 ? false : true;
+    }
+    
+    void start() {
+      this.startFrame = frameCount;
+    }
+    
+    void stop() {
+      this.startFrame = -1;
+    }
+    
+    void update() {
+      if (this.isRunning()) {
+        if (startFrame%FRAMES_PER_CYCLE == 0) {
+          float p = 0.4;
+          WiiControl.this.setLeds(
+            Math.random() < p,
+            Math.random() < p,
+            Math.random() < p,
+            Math.random() < p);
+        }
+      }
+    }
   }
   
   /**
