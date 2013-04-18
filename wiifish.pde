@@ -17,7 +17,7 @@ boolean leds = false;
 
 WiiControl wiiControl;
 
-WiiFishGame gameInstance;
+FishGame gameInstance;
 
 
 
@@ -100,44 +100,17 @@ void keyPressed() {
     leds = !leds;
     wiiControl.setLeds(leds, !leds, !leds, leds);
   } else if (keyCode == ENTER) {
-    gameInstance = new WiiFishGame(wiiControl);
-    gameInstance.startGame();
+    if (gameInstance == null) {
+      gameInstance = new FishGame(wiiControl);
+      gameInstance.startGame();
+    } else {
+      gameInstance = null;
+      println("Game killed.");
+    }
   }
 }
 
 /* incoming osc message are forwarded to the oscEvent method. */
 void oscEvent(OscMessage theOscMessage) {
   wiiControl.oscEvent(theOscMessage);
-}
-
-class WiiFishGame {
-  
-  private WiiController wiimote;
-  private boolean running;
-  
-  public WiiFishGame(WiiController wiimote) {
-    this.wiimote = wiimote;
-    this.running = false;
-  }
-  
-  public void startGame() {
-    this.running = true;
-  }
-  
-  public boolean isRunning() {
-    return this.running;
-  }
-  
-  public boolean togglePauseGame() {
-    this.running = !this.running;
-    return this.isRunning();
-  }
-  
-  public void updateGameState() {
-    if (!this.running) return;
-    // else update game state, fishnibbles, catch a fish etc.
-    
-  }
-  
-  
 }
