@@ -70,6 +70,7 @@ interface WiiController {
 
 public class WiiControl implements WiiController {
   
+  private static final boolean DBG = false;
   private static final int SMOOTH_LEVEL = 2;
   
   private int id, nFishCaught;
@@ -127,13 +128,13 @@ public class WiiControl implements WiiController {
   
   public void fishCaught() {
     this.nFishCaught++;
-    println("You caught a fish! Total: "+nFishCaught);
+    if (DBG) println("WiiControl: Fish caught! Total: "+nFishCaught);
     ledUpdate();
   }
   
   public void gameWon() {
     this.isWon = true;
-    println("WiiControl: game won!");
+    if (DBG) println("WiiControl: game won!");
   }
   
   public void printAcc() {
@@ -166,12 +167,12 @@ public class WiiControl implements WiiController {
       if (which.equals("b")) {
         
         if (theOscMessage.get(1).intValue() == 1) { // down
-          println(">> Trigger pressed @ "+millis());
+          if (DBG) println(">> Trigger pressed @ "+millis());
           this.triggerPressFlag = true;
           this.triggerPressed = true;
         } else { // up
           if(this.triggerPressed) {
-            println(">> Trigger released @ "+millis());
+            if (DBG) println(">> Trigger released @ "+millis());
             this.triggerReleaseFlag = true;
             this.triggerPressed = false;
           }
@@ -266,7 +267,7 @@ public class WiiControl implements WiiController {
 
   
   private void found(int id) {
-    println("NEW mote id: "+id);
+    if (DBG) println("NEW mote id: "+id);
     this.id = id;
     this.setLeds(false,false,false,false);
   }
@@ -492,7 +493,7 @@ public class WiiControl implements WiiController {
     
     void start() {
       this.startFrame = frameCount;
-      println("FireWorks started @ "+millis());
+      if (DBG) println("FireWorks started @ "+millis());
     }
     
     void stop() {
