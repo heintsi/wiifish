@@ -6,11 +6,14 @@ class FishGame {
   private boolean fishAtBait;
   private int fishCount;
   
-  private float probOfNewFish = 0.002;
+  private static final float PROB_OF_NEW_FISH_MIN = 0.002;
+  private static final float PROB_OF_NEW_FISH_MAX = 0.006;
+  private float probOfNewFish = PROB_OF_NEW_FISH_MIN;
   private float probOfNibblesIfFishAtBait = 0.02;
   private float lightPullProbIncr = 0.001;
   
-  private long fishAtBaitTimeMillis = 0;
+  private long fishAtBaitArrivalTimeMillis = 0;
+  private long lastLightPullTimeMillis = 0;
   
   private boolean strongPullDetected;
   private boolean lightPullDetected;
@@ -54,7 +57,7 @@ class FishGame {
     } else {
       if (this.strongPullDetected) {
         this.baitInWater = false;
-        println("No fish!");
+        println("Game: No fish!");
         return;
       }
       this.generateFish();
@@ -93,16 +96,17 @@ class FishGame {
   }
   
   private void updateFishAtBait() {
-    if (Math.random() < probOfNibblesIfFishAt
-    Bait) this.generateFishNibbles();
+    if (Math.random() < probOfNibblesIfFishAtBait) this.generateFishNibbles();
     else if (this.fishHasBeenAtBaitForTooLong()) {
       this.fishAtBait = false;
+      println("game: Fish left bait!");
     }
   }
   
   private boolean fishHasBeenAtBaitForTooLong() {
     // the longer the fish has been at the bait, the higher the probability it leaves
-    return false;
+    long fishAtBaitTime = millis() - this.fishAtBaitArrivalTimeMillis;
+    return fishAtBaitTime > 500 && Math.random() < fishAtBaitTime / 8000;
   }
   
   private void generateFishNibbles() {
@@ -111,12 +115,31 @@ class FishGame {
   
   private void generateFish() {
     if (this.lightPullDetected) {
-      probOfNewFish += lightPullProbIncr;
+      this.increaseFishProbability();
+      this.lastLightPullTimeMillis = millis();
+    } else {
+      this.decreaseFishProbability();
     }
-    if (Math.random() < probOfNewFish) {
+    if (this.enoughTimeFromLastLightPullPassed() && Math.random() < probOfNewFish) {
       this.fishAtBait = true;
+      this.fishAtBaitArrivalTimeMillis = millis();
       println("Game: Fish at bait!!!");
     }
+  }
+  
+  private void increaseFishProbability() {
+    if (this.probOfNewFish < PROB_OF_NEW_FISH_MAX) this.probOfNewFish += this.lightPullProbIncr;
+  }
+  
+  private void decreaseFishProbability() {
+    long diff = millis() - this.lastLightPullTimeMillis;
+    if (diff > 1000 && this.probOfNewFish > PROB_OF_NEW_FISH_MIN) {
+      this.probOfNewFish -= this.lightPullProbIncr/100;
+    }
+  }
+  
+  private boolean enoughTimeFromLastLightPullPassed() {
+    return millis() - this.lastLightPullTimeMillis > 1000;
   }
   
   public boolean togglePauseGame() {
