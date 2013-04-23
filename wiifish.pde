@@ -99,6 +99,7 @@ void keyPressed() {
     wiiControl.gameWon();
   } else if (keyCode == ENTER) {
     if (gameInstance == null) {
+      wiiControl.resetFishing();
       gameInstance = new FishGame(wiiControl);
       gameInstance.startGame();
     } else {

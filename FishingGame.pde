@@ -7,6 +7,10 @@ class FishGame {
   private int fishCount;
   
   private float probOfNewFish = 0.002;
+  private float probOfNibblesIfFishAtBait = 0.02;
+  private float lightPullProbIncr = 0.001;
+  
+  private long fishAtBaitTimeMillis = 0;
   
   private boolean strongPullDetected;
   private boolean lightPullDetected;
@@ -15,7 +19,7 @@ class FishGame {
     this.wiimote = wiimote;
     this.running = false;
     this.fishCount = 0;
-    this.baitInWater = true; // change to false when "isThrown" is implemented
+    this.baitInWater = false;
     this.fishAtBait = false;
     
     this.strongPullDetected = false;
@@ -48,6 +52,11 @@ class FishGame {
       }
       this.updateFishAtBait();
     } else {
+      if (this.strongPullDetected) {
+        this.baitInWater = false;
+        println("No fish!");
+        return;
+      }
       this.generateFish();
     }
   }
@@ -63,13 +72,13 @@ class FishGame {
   }
   
   private void finishGame() {
-    // rumble, flash lights, play sounds
     this.running = false;
+    this.wiimote.gameWon();
     println("Game finished.");
   }
   
   private void checkIfBaitIsThrown() {
-    if (this.wiimote.isThrown() && this.wiimote.triggerPressed()) {
+    if (this.wiimote.triggerRelease()) {
       this.baitInWater = true;
       println("Game: Bait thrown.");
     }
@@ -84,8 +93,16 @@ class FishGame {
   }
   
   private void updateFishAtBait() {
-    
-    if (Math.random() > 0.95) this.generateFishNibbles();
+    if (Math.random() < probOfNibblesIfFishAt
+    Bait) this.generateFishNibbles();
+    else if (this.fishHasBeenAtBaitForTooLong()) {
+      this.fishAtBait = false;
+    }
+  }
+  
+  private boolean fishHasBeenAtBaitForTooLong() {
+    // the longer the fish has been at the bait, the higher the probability it leaves
+    return false;
   }
   
   private void generateFishNibbles() {
@@ -94,7 +111,7 @@ class FishGame {
   
   private void generateFish() {
     if (this.lightPullDetected) {
-      probOfNewFish += 0.002;
+      probOfNewFish += lightPullProbIncr;
     }
     if (Math.random() < probOfNewFish) {
       this.fishAtBait = true;
