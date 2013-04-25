@@ -1,3 +1,5 @@
+import java.util.Map;
+
 interface Player {
   
   //Adds new sample to player.
@@ -17,7 +19,6 @@ class EffectsPlayer implements Player{
   
  private Minim minim;
  private AudioOutput out;
- private Delay delay;
  private Map<String, AudioSample> samples;
  
  //Map samples contains <Sample name, Filename>
@@ -26,10 +27,10 @@ class EffectsPlayer implements Player{
    this.samples = new HashMap<String, AudioSample>();
  }
  
- private void initDelay() {
-   out = minim.getLineOut( Minim.STEREO, 2048 );
-   delay = new Delay( 0.6, 0.9, true, false );
- }
+// private void initDelay() {
+//   out = minim.getLineOut( Minim.STEREO, 2048 );
+//   delay = new Delay( 0.6, 0.9, true, false );
+// }
  
  private void loadSamples(Map<String, String> samples) {
    Iterator i = samples.entrySet().iterator();

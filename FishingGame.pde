@@ -1,6 +1,7 @@
 class FishGame {
   
   private WiiController wiimote;
+  private EffectsPlayer ePlayer;
   private boolean running;
   private boolean baitInWater;
   private boolean fishAtBait;
@@ -18,8 +19,10 @@ class FishGame {
   private boolean strongPullDetected;
   private boolean lightPullDetected;
   
-  public FishGame(WiiController wiimote) {
+  public FishGame(WiiController wiimote, EffectsPlayer ePlayer) {
     this.wiimote = wiimote;
+    this.ePlayer = ePlayer;
+    
     this.running = false;
     this.fishCount = 0;
     this.baitInWater = false;
@@ -83,6 +86,7 @@ class FishGame {
   private void checkIfBaitIsThrown() {
     if (this.wiimote.triggerRelease()) {
       this.baitInWater = true;
+      this.ePlayer.trigger("FLOAT");
       println("Game: Bait thrown.");
     }
   }
@@ -91,6 +95,7 @@ class FishGame {
     this.fishAtBait = false;
     this.baitInWater = false;
     this.fishCount++;
+    this.ePlayer.trigger("FISH_SPLASH");
     println("Game: Caught fish!");
     wiimote.fishesCaught(fishCount);
   }

@@ -1,11 +1,16 @@
+
 /*
 Fishing game for Wiimote.
  */
+
+import ddf.minim.spi.*;
+import ddf.minim.*;
 
 import oscP5.*;
 import netP5.*;
 import java.util.ArrayList;
 import java.util.Iterator;
+
 
 static final boolean SMOOTH_ACC = true;
 
@@ -28,6 +33,8 @@ void setup() {
   myRemoteLocation = new NetAddress("127.0.0.1", 3001);
 
   wiiControl = new WiiControl(myRemoteLocation);
+  
+  initEffects();
 }
 
 void initEffects() {
@@ -107,7 +114,7 @@ void keyPressed() {
   } else if (keyCode == ENTER) {
     if (gameInstance == null) {
       wiiControl.resetFishing();
-      gameInstance = new FishGame(wiiControl);
+      gameInstance = new FishGame(wiiControl, ePlayer);
       gameInstance.startGame();
     } else {
       gameInstance = null;

@@ -199,36 +199,36 @@ public class WiiControl implements WiiController {
       accZData.remove(0);
     
     // update smoothed versions
-    if (accXData.size() > SMOOTH_LEVEL) {
+    if (this.accXData.size() > SMOOTH_LEVEL) {
       float sum = 0.0;
       for (int i = 0; i < SMOOTH_LEVEL; i++) {
-        sum += accXData.get(accXData.size()-1-i);
+        sum += this.accXData.get(this.accXData.size()-1-i);
       }
       float mean = sum / (SMOOTH_LEVEL+1);
-      accXSmooth.add(mean);
+      this.accXSmooth.add(mean);
     }
-    if (accYData.size() > SMOOTH_LEVEL) {
+    if (this.accYData.size() > SMOOTH_LEVEL) {
       float sum = 0.0;
       for (int i = 0; i < SMOOTH_LEVEL; i++) {
-        sum += accYData.get(accYData.size()-1-i);
+        sum += this.accYData.get(this.accYData.size()-1-i);
       }
       float mean = sum / (SMOOTH_LEVEL+1);
-      accYSmooth.add(mean);
+      this.accYSmooth.add(mean);
     }
-    if (accZData.size() > SMOOTH_LEVEL) {
+    if (this.accZData.size() > SMOOTH_LEVEL) {
       float sum = 0.0;
       for (int i = 0; i < SMOOTH_LEVEL; i++) {
-        sum += accZData.get(accZData.size()-1-i);
+        sum += this.accZData.get(this.accZData.size()-1-i);
       }
       float mean = sum / (SMOOTH_LEVEL+1);
-      accZSmooth.add(mean);
+      this.accZSmooth.add(mean);
     }
-    while (accXSmooth.size() > width)
-      accXSmooth.remove(0);
-    while (accYSmooth.size() > width)
-      accYSmooth.remove(0);
-    while (accZSmooth.size() > width)
-      accZSmooth.remove(0);
+    while (this.accXSmooth.size() > width)
+      this.accXSmooth.remove(0);
+    while (this.accYSmooth.size() > width)
+      this.accYSmooth.remove(0);
+    while (this.accZSmooth.size() > width)
+      this.accZSmooth.remove(0);
     
     
     if (isWon) {
