@@ -5,6 +5,7 @@ Fishing game for Wiimote.
 import oscP5.*;
 import netP5.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 static final boolean SMOOTH_ACC = true;
 
@@ -16,7 +17,7 @@ WiiControl wiiControl;
 
 FishGame gameInstance;
 
-
+EffectsPlayer ePlayer;
 
 void setup() {
   size(400, 400);
@@ -29,6 +30,12 @@ void setup() {
   wiiControl = new WiiControl(myRemoteLocation);
 }
 
+void initEffects() {
+  ePlayer = new EffectsPlayer(new Minim(this));
+  ePlayer.addSample("FLOAT", "tiny-splash.wav");
+  ePlayer.addSample("FISH_SPLASH", "water-splashing.wav");
+  ePlayer.addSample("REEL", "fishing-reel.aif"); 
+}
 
 void draw() {
   background(wiiControl.triggerPressed() ? color(255, 0, 0) : 0);  
