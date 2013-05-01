@@ -13,6 +13,7 @@ import java.util.Iterator;
 
 
 static final boolean SMOOTH_ACC = true;
+static final boolean SOUNDS = false;
 
 OscP5 oscP5;
 NetAddress myRemoteLocation;
@@ -34,7 +35,7 @@ void setup() {
 
   wiiControl = new WiiControl(myRemoteLocation);
   
-  initEffects();
+  if (SOUNDS) initEffects();
 }
 
 void initEffects() {
