@@ -11,7 +11,7 @@ import netP5.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-
+boolean drawWiimoteInput = true;
 static final boolean SMOOTH_ACC = true;
 
 OscP5 oscP5;
@@ -25,7 +25,7 @@ FishGame gameInstance;
 EffectsPlayer ePlayer;
 
 void setup() {
-  size(400, 400);
+  size(600, 400);
   frameRate(25);
   /* start oscP5, listening for incoming messages at port 12000 */
   oscP5 = new OscP5(this, 12000);
@@ -46,7 +46,7 @@ void initEffects() {
 
 void draw() {
   background(wiiControl.triggerPressed() ? color(255, 0, 0) : 0);  
-  if (wiiControl.getId() > -1) {
+  if (drawWiimoteInput && wiiControl.getId() > -1) {
     wiiControl.update();
 
     
@@ -87,6 +87,9 @@ void draw() {
   if (gameInstance != null) {
     gameInstance.updateGameState();
   }
+  if (!drawWiimoteInput) { // visualize game state
+    
+  }
 }
 
 void drawAccGraph(ArrayList<Float> accData) {
@@ -120,7 +123,9 @@ void keyPressed() {
       gameInstance = null;
       println("Game killed.");
     }
-  }
+  } else if (keyCode == TAB) {
+    drawWiimoteInput = !drawWiimoteInput;
+  } 
 }
 
 /* incoming osc message are forwarded to the oscEvent method. */
