@@ -12,8 +12,9 @@ import netP5.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-
+boolean drawWiimoteInput = true;
 static final boolean SMOOTH_ACC = true;
+static final boolean SOUNDS = false;
 
 OscP5 oscP5;
 NetAddress myRemoteLocation;
@@ -35,7 +36,7 @@ void setup() {
 
   wiiControl = new WiiControl(myRemoteLocation);
   
-  initEffects();
+  if (SOUNDS) initEffects();
 }
 
 void initEffects() {
@@ -88,6 +89,9 @@ void draw() {
   if (gameInstance != null) {
     gameInstance.updateGameState();
   }
+  if (!drawWiimoteInput) {
+    drawGameState();
+  }
 }
 
 void drawAccGraph(ArrayList<Float> accData) {
@@ -101,6 +105,61 @@ void drawAccGraph(ArrayList<Float> accData) {
       
     lastY = y;
   }
+}
+
+void drawGameState() {
+  background(0);
+  if (gameInstance == null) {
+    textSize(24);
+    fill(220);
+    text("Press Enter to start a game.", 30, 30);
+  } else {
+    drawBaitText();
+    drawFishAmount();
+  }
+  drawGameStatus();
+}
+
+void drawBaitText() {
+  String baitStatusText = "Bait in water..."; 
+  textSize(32);
+  if (gameInstance.isBaitInWater()) {
+    fill(20, 120, 255);
+  } else {
+    baitStatusText = "Press 'b' to lower bait.";
+    fill(220);
+  }
+  text(baitStatusText, 30, 60);
+}
+
+void drawFishAmount() {
+  String fishAmountText = "Fish caught:";
+  int fishCount = gameInstance.getFishCount();
+  if (fishCount == 0) fishAmountText = "No fish caught";
+  textSize(20);
+  fill(220);
+  text(fishAmountText, 30, 100);
+  noStroke();
+  fill(20, 120, 255);
+  rectMode(CORNER);
+  for (int i = 0; i < fishCount; i+=1) {
+    rect(200 + i*40, 82, 20, 20);
+  }
+}
+
+void drawGameStatus() {
+  fill(20);
+  noStroke();
+  rectMode(CORNERS);
+  rect(0, height - 60, width, height);
+  String gameStatusText = "NO GAME";
+  if (gameInstance != null) {
+    if (gameInstance.isRunning()) gameStatusText = "RUNNING";
+    else if (gameInstance.isWon()) gameStatusText = "GAME OVER";
+  }
+  textSize(28);
+  fill(200);
+  text(gameStatusText, width/2 - 78, height - 20);
 }
 
 void mousePressed() {
@@ -121,7 +180,9 @@ void keyPressed() {
       gameInstance = null;
       println("Game killed.");
     }
-  }
+  } else if (keyCode == TAB) {
+    drawWiimoteInput = !drawWiimoteInput;
+  } 
 }
 
 /* incoming osc message are forwarded to the oscEvent method. */

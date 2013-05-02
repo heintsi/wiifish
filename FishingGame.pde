@@ -22,7 +22,7 @@ class FishGame {
   
   public FishGame(WiiController wiimote, EffectsPlayer ePlayer) {
     this.wiimote = wiimote;
-    this.ePlayer = ePlayer;
+    if (wiifish.SOUNDS) this.ePlayer = ePlayer;
     
     this.running = false;
     this.fishCount = 0;
@@ -37,6 +37,18 @@ class FishGame {
   public void startGame() {
     this.running = true;
     println("Game started.");
+  }
+  
+  public boolean isBaitInWater() {
+    return this.baitInWater;
+  }
+  
+  public boolean isWon() {
+    return this.isAllowedToFinish();
+  }
+  
+  public int getFishCount() {
+    return this.fishCount;
   }
   
   public void updateGameState() {
@@ -74,9 +86,7 @@ class FishGame {
   }
   
   private boolean isAllowedToFinish() {
-    if (this.fishCount < 4)
-      return false;
-    return true;
+    return this.fishCount >= 4;
   }
   
   private void finishGame() {
@@ -88,7 +98,7 @@ class FishGame {
   private void checkIfBaitIsThrown() {
     if (this.wiimote.triggerRelease()) {
       this.baitInWater = true;
-      this.ePlayer.trigger("FLOAT");
+      if (wiifish.SOUNDS) this.ePlayer.trigger("FLOAT");
       println("Game: Bait thrown.");
     }
   }
@@ -97,16 +107,18 @@ class FishGame {
     this.fishAtBait = false;
     this.baitInWater = false;
     this.fishCount++;
-    this.ePlayer.trigger("FISH_SPLASH");
-    println("Game: Caught fish!");
+    
+    if (wiifish.SOUNDS) this.ePlayer.trigger("FISH_SPLASH");
+    println("Game: Caught fish! [WITH PROB: "+ this.probOfNewFish + "]");
     wiimote.fishesCaught(fishCount);
+    this.probOfNewFish = PROB_OF_NEW_FISH_MIN;
   }
   
   private void updateFishAtBait() {
     if (Math.random() < probOfNibblesIfFishAtBait) this.generateFishNibbles();
     else if (this.fishHasBeenAtBaitForTooLong()) {
       this.fishAtBait = false;
-      println("game: Fish left bait!");
+      println("Game: Fish left bait!");
     }
   }
   
