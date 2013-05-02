@@ -18,6 +18,7 @@ class FishGame {
   
   private boolean strongPullDetected;
   private boolean lightPullDetected;
+  private boolean reelingDetected;
   
   public FishGame(WiiController wiimote, EffectsPlayer ePlayer) {
     this.wiimote = wiimote;
@@ -41,6 +42,7 @@ class FishGame {
   public void updateGameState() {
      this.strongPullDetected = wiimote.strongPull();
      this.lightPullDetected = wiimote.lightPull();
+     this.reelingDetected = wiimote.isReeling();
     
     if (!this.isRunning()) return;
     // else update game state, fishnibbles, catch a fish etc.
@@ -53,7 +55,7 @@ class FishGame {
       return;
     }
     if (this.fishAtBait) {
-      if (this.strongPullDetected) {
+      if (this.strongPullDetected && this.reelingDetected) {
         this.fishCaught();
       }
       this.updateFishAtBait();

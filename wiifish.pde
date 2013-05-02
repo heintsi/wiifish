@@ -3,6 +3,7 @@
 Fishing game for Wiimote.
  */
 
+import ddf.minim.analysis.*;
 import ddf.minim.spi.*;
 import ddf.minim.*;
 
