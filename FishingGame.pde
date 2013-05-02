@@ -38,6 +38,14 @@ class FishGame {
     println("Game started.");
   }
   
+  public boolean isBaitInWater() {
+    return this.baitInWater;
+  }
+  
+  public int getFishCount() {
+    return this.fishCount;
+  }
+  
   public void updateGameState() {
      this.strongPullDetected = wiimote.strongPull();
      this.lightPullDetected = wiimote.lightPull();
@@ -105,7 +113,7 @@ class FishGame {
     if (Math.random() < probOfNibblesIfFishAtBait) this.generateFishNibbles();
     else if (this.fishHasBeenAtBaitForTooLong()) {
       this.fishAtBait = false;
-      println("game: Fish left bait!");
+      println("Game: Fish left bait!");
     }
   }
   

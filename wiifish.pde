@@ -26,7 +26,7 @@ FishGame gameInstance;
 EffectsPlayer ePlayer;
 
 void setup() {
-  size(600, 400);
+  size(400, 400);
   frameRate(25);
   /* start oscP5, listening for incoming messages at port 12000 */
   oscP5 = new OscP5(this, 12000);
@@ -47,7 +47,7 @@ void initEffects() {
 
 void draw() {
   background(wiiControl.triggerPressed() ? color(255, 0, 0) : 0);  
-  if (drawWiimoteInput && wiiControl.getId() > -1) {
+  if (wiiControl.getId() > -1) {
     wiiControl.update();
 
     
@@ -88,8 +88,8 @@ void draw() {
   if (gameInstance != null) {
     gameInstance.updateGameState();
   }
-  if (!drawWiimoteInput) { // visualize game state
-    
+  if (!drawWiimoteInput) {
+    drawGameState();
   }
 }
 
@@ -104,6 +104,50 @@ void drawAccGraph(ArrayList<Float> accData) {
       
     lastY = y;
   }
+}
+
+void drawGameState() {
+  background(0);
+  if (gameInstance == null) {
+    textSize(24);
+    fill(220);
+    text("Press Enter to start a game.", 30, 30);
+  } else {
+    drawBaitText();
+    drawFishAmount();
+    drawGameStatus();
+  }
+}
+
+void drawBaitText() {
+  String baitStatusText = "Bait in water..."; 
+  textSize(32);
+  if (gameInstance.isBaitInWater()) {
+    fill(20, 120, 255);
+  } else {
+    baitStatusText = "Press 'b' to lower bait.";
+    fill(220);
+  }
+  text(baitStatusText, 30, 60);
+}
+
+void drawFishAmount() {
+  String fishAmountText = "Fish caught:";
+  int fishCount = gameInstance.getFishCount();
+  if (fishCount == 0) fishAmountText = "No fish caught";
+  textSize(20);
+  fill(220);
+  text(fishAmountText, 30, 100);
+  noStroke();
+  fill(20, 120, 255);
+  rectMode(CENTER);
+  for (int i = 0; i < fishCount; i+=1) {
+    rect(200 + i*40, 100, 20, 20);
+  }
+}
+
+void drawGameStatus() {
+  
 }
 
 void mousePressed() {
