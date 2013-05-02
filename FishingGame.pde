@@ -107,8 +107,9 @@ class FishGame {
     this.fishCount++;
     
     if (wiifish.SOUNDS) this.ePlayer.trigger("FISH_SPLASH");
-    println("Game: Caught fish!");
+    println("Game: Caught fish! [WITH PROB: "+ this.probOfNewFish + "]");
     wiimote.fishesCaught(fishCount);
+    this.probOfNewFish = PROB_OF_NEW_FISH_MIN;
   }
   
   private void updateFishAtBait() {
