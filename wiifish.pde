@@ -115,8 +115,8 @@ void drawGameState() {
   } else {
     drawBaitText();
     drawFishAmount();
-    drawGameStatus();
   }
+  drawGameStatus();
 }
 
 void drawBaitText() {
@@ -140,14 +140,25 @@ void drawFishAmount() {
   text(fishAmountText, 30, 100);
   noStroke();
   fill(20, 120, 255);
-  rectMode(CENTER);
+  rectMode(CORNER);
   for (int i = 0; i < fishCount; i+=1) {
-    rect(200 + i*40, 100, 20, 20);
+    rect(200 + i*40, 82, 20, 20);
   }
 }
 
 void drawGameStatus() {
-  
+  fill(20);
+  noStroke();
+  rectMode(CORNERS);
+  rect(0, height - 60, width, height);
+  String gameStatusText = "NO GAME";
+  if (gameInstance != null) {
+    if (gameInstance.isRunning()) gameStatusText = "RUNNING";
+    else if (gameInstance.isWon()) gameStatusText = "GAME OVER";
+  }
+  textSize(28);
+  fill(200);
+  text(gameStatusText, width/2 - 78, height - 20);
 }
 
 void mousePressed() {

@@ -42,6 +42,10 @@ class FishGame {
     return this.baitInWater;
   }
   
+  public boolean isWon() {
+    return this.isAllowedToFinish();
+  }
+  
   public int getFishCount() {
     return this.fishCount;
   }
@@ -80,9 +84,7 @@ class FishGame {
   }
   
   private boolean isAllowedToFinish() {
-    if (this.fishCount < 4)
-      return false;
-    return true;
+    return this.fishCount >= 4;
   }
   
   private void finishGame() {
