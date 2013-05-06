@@ -26,6 +26,8 @@ interface WiiController {
   */
   public boolean isReeling();
   
+  public boolean isReelingComplete();
+  
   /**
   Event telling a light pull has been made.
   */
@@ -373,6 +375,10 @@ public class WiiControl implements WiiController {
   }
   
   public boolean isReeling() {
+    return this.reelingDetector.isReelingStarted();
+  }
+  
+   public boolean isReelingComplete() {
     return this.reelingDetector.isReelingComplete();
   }
   
