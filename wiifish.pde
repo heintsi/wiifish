@@ -3,6 +3,7 @@
 Fishing game for Wiimote.
  */
 
+import ddf.minim.analysis.*;
 import ddf.minim.spi.*;
 import ddf.minim.*;
 
@@ -13,7 +14,7 @@ import java.util.Iterator;
 
 boolean drawWiimoteInput = true;
 static final boolean SMOOTH_ACC = true;
-static final boolean SOUNDS = false;
+static final boolean SOUNDS = true;
 
 OscP5 oscP5;
 NetAddress myRemoteLocation;

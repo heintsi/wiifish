@@ -26,6 +26,8 @@ interface WiiController {
   */
   public boolean isReeling();
   
+  public boolean isReelingComplete();
+  
   /**
   Event telling a light pull has been made.
   */
@@ -71,7 +73,7 @@ interface WiiController {
 
 public class WiiControl implements WiiController {
   
-  private static final boolean DBG = false;
+  private static final boolean DBG = true;
   private static final int SMOOTH_LEVEL = 2;
   
   private int id, nFishCaught;
@@ -80,6 +82,7 @@ public class WiiControl implements WiiController {
   private NetAddress myRemoteLocation;
   private Rumbler rumbler;
   private FireWorks fireWorks;
+  private ReelingGestureDetector reelingDetector;
   
   private ArrayList<Float> accXData,accYData,accZData, accXSmooth,accYSmooth,accZSmooth;
   
@@ -107,6 +110,7 @@ public class WiiControl implements WiiController {
     this.myRemoteLocation = myRemoteLocation;
     this.rumbler = new Rumbler();
     this.fireWorks = new FireWorks();
+    this.reelingDetector = new ReelingGestureDetector(this);
     
     // lists store accelerator data so that the newest data is at the end
     this.accXData = new ArrayList<Float>();
@@ -132,6 +136,7 @@ public class WiiControl implements WiiController {
     if (DBG) println("WiiControl: Fish caught! Total: "+nFishCaught);
     ledUpdate();
   }
+  
   public void fishesCaught(int n) {
     this.nFishCaught = n;
     println("WiiControl: Fishes caught: "+nFishCaught);
@@ -152,18 +157,24 @@ public class WiiControl implements WiiController {
     // Wiimote found, typetag "i"
     if (theOscMessage.checkAddrPattern("/wii/found")) {
       this.found(theOscMessage.get(0).intValue());
+      println("***WII FOUND***");
     }
     // Accelerometer update, typetag "if"
     else if (theOscMessage.addrPattern().contains("/wii/acc")) {
       String which = theOscMessage.addrPattern().split("/")[3];
       char whichC = which.toCharArray()[0];
-      
-      float diff = Math.abs(this.getAcc(whichC) - theOscMessage.get(1).floatValue());
+      float accVal = 0.0;
+      if(theOscMessage.get(1) == null) {
+        accVal = theOscMessage.get(0).floatValue();
+      } else {
+        accVal = theOscMessage.get(1).floatValue();
+      }
+      float diff = Math.abs(this.getAcc(whichC) - accVal);
       if (diff > 0.05) {
         //println("big change in acc: "+which+" ("+diff+")");
       }
       
-      this.setAcc(whichC, theOscMessage.get(1).floatValue());
+      this.setAcc(whichC, accVal);
     }
     
     // Buttons
@@ -173,7 +184,7 @@ public class WiiControl implements WiiController {
       // The trigger, namely B-button
       if (which.equals("b")) {
         
-        if (theOscMessage.get(1).intValue() == 1) { // down
+        if (theOscMessage.get(0).intValue() == 1) { // down
           if (DBG) println(">> Trigger pressed @ "+millis());
           this.triggerPressFlag = true;
           this.triggerPressed = true;
@@ -237,6 +248,7 @@ public class WiiControl implements WiiController {
     } else {
       testStrongPull();
       testLightPull();
+      reelingDetector.testReeling();
     }
     
     
@@ -363,7 +375,11 @@ public class WiiControl implements WiiController {
   }
   
   public boolean isReeling() {
-    return false;
+    return this.reelingDetector.isReelingStarted();
+  }
+  
+   public boolean isReelingComplete() {
+    return this.reelingDetector.isReelingComplete();
   }
   
   public boolean lightPull() {

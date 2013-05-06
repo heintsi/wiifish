@@ -7,8 +7,8 @@ class FishGame {
   private boolean fishAtBait;
   private int fishCount;
   
-  private static final float PROB_OF_NEW_FISH_MIN = 0.002;
-  private static final float PROB_OF_NEW_FISH_MAX = 0.006;
+  private static final float PROB_OF_NEW_FISH_MIN = 0.003;
+  private static final float PROB_OF_NEW_FISH_MAX = 0.008;
   private float probOfNewFish = PROB_OF_NEW_FISH_MIN;
   private float probOfNibblesIfFishAtBait = 0.02;
   private float lightPullProbIncr = 0.001;
@@ -18,6 +18,7 @@ class FishGame {
   
   private boolean strongPullDetected;
   private boolean lightPullDetected;
+  private boolean reelingDetected;
   
   public FishGame(WiiController wiimote, EffectsPlayer ePlayer) {
     this.wiimote = wiimote;
@@ -53,6 +54,7 @@ class FishGame {
   public void updateGameState() {
      this.strongPullDetected = wiimote.strongPull();
      this.lightPullDetected = wiimote.lightPull();
+     this.reelingDetected = wiimote.isReelingComplete();
     
     if (!this.isRunning()) return;
     // else update game state, fishnibbles, catch a fish etc.
@@ -65,9 +67,10 @@ class FishGame {
       return;
     }
     if (this.fishAtBait) {
-      if (this.strongPullDetected) {
+      if (this.strongPullDetected && this.reelingDetected) {
         this.fishCaught();
       }
+      this.checkIfReelingStarted();
       this.updateFishAtBait();
     } else {
       if (this.strongPullDetected) {
@@ -98,6 +101,12 @@ class FishGame {
       this.baitInWater = true;
       if (wiifish.SOUNDS) this.ePlayer.trigger("FLOAT");
       println("Game: Bait thrown.");
+    }
+  }
+  
+  private void checkIfReelingStarted() {
+    if(this.wiimote.isReeling()) {
+      //if (wiifish.SOUNDS) this.ePlayer.trigger("REEL");
     }
   }
   
