@@ -1,6 +1,8 @@
 Wii Fish
 =======
 
+Demo video: http://youtu.be/fprqP6Brhh4
+
 Wii Fish is a Wiimote-controlled fishing game. 
 The idea is that there is no need for display: the Wiimote is the interface for both playing and getting feedback. However, there is a small (400x400px) graphical interface, which is somewhat useful for modeling some aspects of the application state.
 
